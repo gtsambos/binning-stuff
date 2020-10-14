@@ -1,0 +1,59 @@
+---
+title: "binning-in-tidyverse"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-packages, echo=FALSE}
+library(tidyverse)
+```
+
+I'll just generate 1000 rows of fake data to use as an example -- use your own dataframe instead of `data` here! 
+
+```{r make-data}
+id <- paste0('person', 1:1000, sep="")
+time <- rexp(1000, rate=1)
+data <- data.frame(id, time)
+```
+Here's what the first 20 rows look like:
+
+```{r show-data}
+head(data, 20)
+```
+
+## Binning
+
+Let's use `mutate` to create a new column, `binned_time`. This will show the bin that each response time falls in.
+If the width of each bin is equal (say, 0.1 of a sec each), you can use `ceilf` or `floor` for this:
+
+```{r equal-bins}
+data <- data %>% mutate(binned_time = floor(time*10)/10)
+head(data, 20)
+```
+(Let me know if you want unequal bin sizes -- this is still possible just a tiny bit more complicated!)
+
+## Counts
+
+Let's count how many observations fall into each bin.
+
+```{r tally}
+data %>% count(binned_time)
+# NB: This is the same as
+# data %>% group_by(binned_time) %>% tally()
+```
+
+## Splitting data by bins
+
+Maybe you do actually want to split the data up by the binned time!
+For instance, maybe you want to save each set of binned times separately so that you can
+run different analyses on each of them later on. 
+In this case, you can use `group_split()`. The output is a list.
+
+```{r split-data}
+bin_list <- data %>% group_by(binned_time) %>% group_split()
+bin_list[[3]]
+```
+
